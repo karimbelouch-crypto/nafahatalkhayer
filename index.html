@@ -6,7 +6,15 @@
   <script>
     const STORE_CONFIG = {
       // رابط Google Sheet (Apps Script Web App) - املأه باش توصلك الطلبات
-      GOOGLE_SHEET_URL: "",
+      GOOGLE_SHEET_URL: "     function doPost(e) {
+        var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+       if (sheet.getLastRow() === 0) {
+          sheet.appendRow(["التاريخ", "رقم الطلب", "المنتج", "الاسم الكامل", "رقم الهاتف", "المدينة / العنوان", "العرض المختار", "الكمية", "الثمن الإجمالي (MAD)"]);
+      }
+       var data = JSON.parse(e.postData.contents);
+        sheet.appendRow([new Date(), data.order_id, data.product_name, data.full_name, "'" + data.phone, data.address, data.offer_title, data.quantity, data.total_price]);
+        return ContentService.createTextOutput(JSON.stringify({status: "success"})).setMimeType(ContentService.MimeType.JSON);
+    }",
       FACEBOOK_PIXEL_ID: "",
       TIKTOK_PIXEL_ID: "",
       WHATSAPP_NUMBER: "212785119464",
