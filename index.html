@@ -7,8 +7,7 @@
     const STORE_CONFIG = {
       // رابط Google Sheet (Apps Script Web App) - املأه باش توصلك الطلبات
       GOOGLE_SHEET_URL: "https://script.google.com/macros/s/AKfycbz-tLRYO0VbbStFeLW9InigB3wsmZI_w2GluSt1jPi9M92gZgKN0M-PckOATh7GDrt5aA/exec",
-      FACEBOOK_PIXEL_ID: "1467414725316272
-",
+      FACEBOOK_PIXEL_ID: "1467414725316272",
       TIKTOK_PIXEL_ID: "",
       WHATSAPP_NUMBER: "212694983783",
       PRODUCT_ID: "NAFAHAT-ALKHAYER-5L",
@@ -53,7 +52,7 @@
     }
     .btn-pulse { animation: pulse-theme 2s infinite; }
     .offer-card { transition: all .2s ease; }
-    .offer-card.selected { border-color: var(--main); background-color: var(--light); box-shadow: 0 4px 16px -2px rgba(var(--rgb), .25); }
+    .offer-card.selected, .offer-card.selected:hover { border-color: var(--main); background-color: var(--light); box-shadow: 0 4px 16px -2px rgba(var(--rgb), .25); }
     .img-placeholder {
       min-height: 230px;
       background: repeating-linear-gradient(45deg, #F8EFE7, #F8EFE7 12px, #EBD9C8 12px, #EBD9C8 24px);
@@ -411,7 +410,7 @@
 
   <script>
     const P = STORE_CONFIG.PACK_PRICES;
-    let selectedBundle = { id: "2", title: `2 قنينات 5 لتر + بخاخ بـ ${P.pack2} درهم`, qty: 2, price: P.pack2 };
+    let selectedBundle = { id: "2", sadaqa: false, title: `2 قنينات 5 لتر + بخاخ بـ ${P.pack2} درهم`, qty: 2, price: P.pack2 };
 
     function initFacebookPixel(id) {
       if (!id) return;
@@ -459,28 +458,32 @@
       } catch (e) {}
     }
 
+    function paintCard(card, on) {
+      const i = card.querySelector(".radio-indicator"), d = card.querySelector(".radio-dot"), p = card.querySelector(".offer-price-text");
+      card.classList.toggle("selected", on);
+      card.classList.toggle("border-emerald-200", !on);
+      card.classList.toggle("bg-white", !on);
+      card.setAttribute("aria-checked", on ? "true" : "false");
+      card.tabIndex = on ? 0 : -1;
+      if (i) { i.style.borderColor = on ? "var(--main)" : "#B07F52"; i.style.backgroundColor = on ? "var(--main)" : "#fff"; }
+      if (d) { d.classList.toggle("hidden", !on); d.classList.toggle("bg-white", true); }
+      if (p) { p.style.color = on ? "var(--main)" : ""; p.classList.toggle("text-base", on); p.classList.toggle("text-sm", !on); }
+    }
+
     function selectCard(card) {
-      document.querySelectorAll("#bundleContainer .offer-card").forEach(c => {
-        c.classList.remove("selected"); c.classList.add("border-emerald-200", "bg-white");
-        const i = c.querySelector(".radio-indicator"), d = c.querySelector(".radio-dot");
-        if (i) { i.style.borderColor = "#C9A27E"; i.style.backgroundColor = "#fff"; }
-        if (d) d.classList.add("hidden");
-      });
-      card.classList.add("selected"); card.classList.remove("border-emerald-200", "bg-white");
-      const i = card.querySelector(".radio-indicator"), d = card.querySelector(".radio-dot");
-      if (i) { i.style.borderColor = STORE_CONFIG.THEME_COLOR; i.style.backgroundColor = STORE_CONFIG.THEME_COLOR; }
-      if (d) d.classList.remove("hidden");
+      const same = selectedBundle.id === card.dataset.bundleId;
+      document.querySelectorAll("#bundleContainer .offer-card").forEach(c => paintCard(c, c === card));
       selectedBundle = {
         id: card.dataset.bundleId,
         title: card.querySelector(".offer-title-text").textContent.trim(),
         qty: parseInt(card.dataset.qty, 10) || 1,
         price: parseFloat(card.dataset.price) || P.pack2
       };
+      selectedBundle.sadaqa = card.dataset.sadaqa === "1";
       document.getElementById("summaryOfferTitle").textContent = selectedBundle.title;
       document.getElementById("summaryPriceBadge").textContent = `MAD ${selectedBundle.price.toFixed(2)}`;
-      selectedBundle.sadaqa = card.dataset.sadaqa === "1";
       document.getElementById("sadaqaFields").classList.toggle("hidden", !selectedBundle.sadaqa);
-      track("InitiateCheckout");
+      if (!same) track("InitiateCheckout");
     }
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -497,8 +500,13 @@
           card.querySelector(".offer-title-text").textContent = labels[k];
           card.querySelector(".offer-price-text").textContent = `${P[k]} DH`;
         }
+        card.setAttribute("role", "radio");
         card.addEventListener("click", () => selectCard(card));
+        card.addEventListener("keydown", e => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectCard(card); }
+        });
       });
+      document.querySelectorAll("#bundleContainer .offer-card").forEach(c => paintCard(c, c.dataset.bundleId === selectedBundle.id));
       selectedBundle.title = labels.pack2;
       document.getElementById("summaryOfferTitle").textContent = labels.pack2;
       document.getElementById("summaryPriceBadge").textContent = `MAD ${P.pack2.toFixed(2)}`;
