@@ -445,7 +445,7 @@
       }, extra || {});
       if (window.fbq && STORE_CONFIG.FACEBOOK_PIXEL_ID) { try { window.fbq('track', eventType, payload); } catch (e) {} }
       if (window.ttq && STORE_CONFIG.TIKTOK_PIXEL_ID) {
-        const map = { ViewContent: "ViewContent", InitiateCheckout: "InitiateCheckout", Lead: "SubmitForm" };
+        const map = { ViewContent: "ViewContent", InitiateCheckout: "InitiateCheckout", Lead: "SubmitForm", Purchase: "CompletePayment" };
         try { if (eventType !== "PageView") window.ttq.track(map[eventType] || eventType, payload); } catch (e) {}
       }
     }
@@ -483,7 +483,6 @@
       document.getElementById("summaryOfferTitle").textContent = selectedBundle.title;
       document.getElementById("summaryPriceBadge").textContent = `MAD ${selectedBundle.price.toFixed(2)}`;
       document.getElementById("sadaqaFields").classList.toggle("hidden", !selectedBundle.sadaqa);
-      if (!same) track("InitiateCheckout");
     }
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -514,7 +513,6 @@
       initFacebookPixel(STORE_CONFIG.FACEBOOK_PIXEL_ID);
       initTikTokPixel(STORE_CONFIG.TIKTOK_PIXEL_ID);
       if (window.fbq && STORE_CONFIG.FACEBOOK_PIXEL_ID) window.fbq('track', 'PageView');
-      track("ViewContent");
 
       document.getElementById("sadaqaCta").addEventListener("click", function () {
         const c = document.querySelector('#bundleContainer [data-sadaqa="1"]');
@@ -557,7 +555,6 @@
         btn.disabled = true; txt.textContent = "جاري تسجيل طلبك..."; sp.classList.remove("hidden");
 
         const orderId = "NK-" + Math.floor(100000 + Math.random() * 900000);
-        track("Lead", { order_id: orderId });
         await sendToSheet({
           order_id: orderId, timestamp: new Date().toISOString(),
           product_name: STORE_CONFIG.PRODUCT_NAME, full_name: name, phone: phone, address: addr,
@@ -567,6 +564,7 @@
           currency: STORE_CONFIG.CURRENCY, source_url: location.href
         });
 
+        track("Purchase", { order_id: orderId });
         btn.disabled = false; txt.textContent = "تأكيد الطلب"; sp.classList.add("hidden");
         document.getElementById("modalOrderId").textContent = "#" + orderId;
         document.getElementById("modalCustomerName").textContent = name;
