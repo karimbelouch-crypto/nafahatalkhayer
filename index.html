@@ -514,12 +514,8 @@
       initTikTokPixel(STORE_CONFIG.TIKTOK_PIXEL_ID);
       if (window.fbq && STORE_CONFIG.FACEBOOK_PIXEL_ID) window.fbq('track', 'PageView');
 
-      // ===== TikTok funnel: ViewContent (مرة وحدة) + 30 ثانية + سكرول 75% =====
+      // ===== TikTok funnel: ViewContent (مرة وحدة) + سكرول 75% =====
       track("ViewContent");
-
-      setTimeout(function () {
-        try { if (window.ttq) window.ttq.track("Engaged30s"); } catch (e) {}
-      }, 30000);
 
       let scroll75Fired = false;
       window.addEventListener("scroll", function () {
@@ -556,6 +552,12 @@
       }));
 
       const form = document.getElementById("codOrderForm"), err = document.getElementById("formErrorBox");
+      let formStarted = false;
+      form.addEventListener("focusin", function () {
+        if (formStarted) return;
+        formStarted = true;
+        track("InitiateCheckout");
+      });
       const showErr = m => { err.textContent = m; err.classList.remove("hidden"); };
       form.addEventListener("submit", async function (e) {
         e.preventDefault(); err.classList.add("hidden");
@@ -599,7 +601,6 @@
         const name = document.getElementById("customerName").value.trim() || "زبون";
         const phone = document.getElementById("customerPhone").value.trim() || "غير محدد";
         const addr = document.getElementById("customerAddress").value.trim() || "غير محدد";
-        track("Lead", { method: "WhatsApp" });
         const msg = [
           `السلام عليكم، بغيت نطلب ${STORE_CONFIG.PRODUCT_NAME}:`,
           `• العرض: ${selectedBundle.title}`,
