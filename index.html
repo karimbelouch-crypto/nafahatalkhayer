@@ -445,7 +445,7 @@
       }, extra || {});
       if (window.fbq && STORE_CONFIG.FACEBOOK_PIXEL_ID) { try { window.fbq('track', eventType, payload); } catch (e) {} }
       if (window.ttq && STORE_CONFIG.TIKTOK_PIXEL_ID) {
-        const map = { ViewContent: "ViewContent", InitiateCheckout: "InitiateCheckout", Lead: "SubmitForm", Purchase: "CompletePayment" };
+        const map = { ViewContent: "ViewContent", InitiateCheckout: "InitiateCheckout", Lead: "SubmitForm", Purchase: "PlaceAnOrder" };
         try { if (eventType !== "PageView") window.ttq.track(map[eventType] || eventType, payload); } catch (e) {}
       }
     }
@@ -513,6 +513,23 @@
       initFacebookPixel(STORE_CONFIG.FACEBOOK_PIXEL_ID);
       initTikTokPixel(STORE_CONFIG.TIKTOK_PIXEL_ID);
       if (window.fbq && STORE_CONFIG.FACEBOOK_PIXEL_ID) window.fbq('track', 'PageView');
+
+      // ===== TikTok funnel: ViewContent (مرة وحدة) + 30 ثانية + سكرول 75% =====
+      track("ViewContent");
+
+      setTimeout(function () {
+        try { if (window.ttq) window.ttq.track("Engaged30s"); } catch (e) {}
+      }, 30000);
+
+      let scroll75Fired = false;
+      window.addEventListener("scroll", function () {
+        if (scroll75Fired) return;
+        const scrolled = (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight;
+        if (scrolled >= 0.75) {
+          scroll75Fired = true;
+          try { if (window.ttq) window.ttq.track("Scroll75"); } catch (e) {}
+        }
+      }, { passive: true });
 
       document.getElementById("sadaqaCta").addEventListener("click", function () {
         const c = document.querySelector('#bundleContainer [data-sadaqa="1"]');
